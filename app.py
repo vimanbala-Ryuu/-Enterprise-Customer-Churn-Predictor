@@ -84,8 +84,8 @@ def init_db():
     # Automatically create the default admin account if it doesn't exist
     admin_exists = execute_db("SELECT * FROM users WHERE username = 'admin'", fetchone=True)
     if not admin_exists:
-        default_hash = generate_password_hash('admin@newTRUE1')
-        execute_db("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", ('admin', default_hash, 'Core Admin'), commit=True)
+        default_hash = generate_password_hash('admin123')
+        execute_db("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", ('admin', default_hash, 'Enterprise AI Engineer'), commit=True)
 
 init_db()
 
