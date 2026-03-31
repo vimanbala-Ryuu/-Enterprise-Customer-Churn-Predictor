@@ -3,34 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepRetain - Request Access</title>
+    <title>DeepRetain - Register</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { font-family: system-ui, -apple-system, sans-serif; }</style>
 </head>
-<body class="bg-slate-50 flex items-center justify-center h-screen">
-    <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+<body class="bg-[#f8f9fa] flex items-center justify-center min-h-screen text-[#202124] p-4 py-10">
+
+    <div class="bg-white p-8 md:p-10 rounded-[2rem] shadow-sm border border-[#e8eaed] w-full max-w-md relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1a73e8] to-blue-400"></div>
+
         <div class="text-center mb-8">
-            <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">Request Access</h2>
-            <p class="text-sm text-slate-500 mt-1">Join the DeepRetain intelligence network</p>
+            <div class="w-14 h-14 bg-gradient-to-br from-[#1a73e8] to-blue-500 rounded-2xl mx-auto flex items-center justify-center text-white font-extrabold text-3xl mb-5 shadow-lg shadow-blue-200">D</div>
+            <h2 class="text-2xl font-bold tracking-tight text-[#202124]">Create an account</h2>
+            <p class="text-[14px] text-[#5f6368] mt-1.5">Join DeepRetain Intelligence</p>
         </div>
-        
-        <form action="/" method="GET" class="space-y-5">
+
+        {% if error %}
+        <div class="bg-[#fce8e6] border border-[#f28b82] text-[#c5221f] px-4 py-3 rounded-xl text-[13px] font-bold mb-6 text-center">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="bg-[#e6f4ea] border border-[#81c995] text-[#137333] px-4 py-3 rounded-xl text-[13px] font-bold mb-6 text-center">
+            {{ success }}
+        </div>
+        {% endif %}
+
+        <form action="/register" method="POST" class="space-y-4">
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
-                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Jane Doe" required>
+                <label class="block text-[11px] font-bold text-[#5f6368] uppercase tracking-wider mb-2">Username</label>
+                <input type="text" name="username" required class="w-full bg-[#f1f3f4] border border-[#dadce0] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] transition" placeholder="Choose a unique username">
             </div>
+
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">Corporate Email</label>
-                <input type="email" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="jane@enterprise.com" required>
+                <label class="block text-[11px] font-bold text-[#5f6368] uppercase tracking-wider mb-2">System Role</label>
+                <select name="role" class="w-full bg-[#f1f3f4] border border-[#dadce0] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] transition text-[#202124] appearance-none cursor-pointer">
+                    <option value="Data Analyst">User</option>
+                    <option value="Data Analyst">Data Analyst</option>
+                    <option value="AI Engineer">AI Engineer</option>
+                    <option value="ML Engineer">ML Engineer</option>
+                    <option value="Executive Admin">Executive Admin</option>
+                </select>
             </div>
+            
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">Desired Password</label>
-                <input type="password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••" required>
+                <label class="block text-[11px] font-bold text-[#5f6368] uppercase tracking-wider mb-2">Password</label>
+                <input type="password" name="password" required class="w-full bg-[#f1f3f4] border border-[#dadce0] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] transition" placeholder="Create a strong password">
             </div>
-            <button type="submit" class="w-full bg-indigo-600 text-white font-extrabold py-3 rounded-xl shadow-md hover:bg-indigo-700 transition mt-4">Create Account</button>
+            
+            <button type="submit" class="w-full bg-[#1a73e8] text-white font-bold px-8 py-3.5 rounded-xl hover:bg-[#1557b0] transition shadow-sm mt-6">Register Account</button>
         </form>
-        
-        <p class="text-center text-sm text-slate-500 mt-6 font-medium">Already deployed? <a href="/login" class="text-indigo-600 hover:text-indigo-800">Return to Login</a></p>
+
+        <div class="mt-8 text-center text-[13px] text-[#5f6368] border-t border-[#e8eaed] pt-6">
+            Already have an account? <a href="/login" class="text-[#1a73e8] font-bold hover:underline transition">Sign in</a>
+        </div>
     </div>
+
 </body>
 </html>

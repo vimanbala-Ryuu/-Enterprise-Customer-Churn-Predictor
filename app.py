@@ -1,5 +1,7 @@
 import pandas as pd
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
 import joblib
 import json
 import uuid
@@ -23,6 +25,8 @@ if GEMINI_API_KEY:
         print(f"⚠️ Gemini init failed: {e}")
 
 app = Flask(__name__)
+# CRUCIAL FOR LOGIN: Secret key allows Flask to encrypt the user's session securely
+app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY", "deepretain-fallback-secret-key-123")
 
 # --- HYBRID DATABASE ENGINE ---
 def execute_db(query, params=(), fetchone=False, fetchall=False, commit=False):
@@ -68,6 +72,7 @@ def execute_db(query, params=(), fetchone=False, fetchall=False, commit=False):
 def init_db():
     execute_db('''CREATE TABLE IF NOT EXISTS services (id TEXT PRIMARY KEY, service_name TEXT, service_type TEXT, status TEXT, churn_prob REAL, display_features TEXT)''', commit=True)
     execute_db('''CREATE TABLE IF NOT EXISTS reports (service_id TEXT PRIMARY KEY, predictions_json TEXT, stats_json TEXT)''', commit=True)
+    execute_db('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password_hash TEXT, role TEXT)''', commit=True)
     
     if DATABASE_URL:
         try:
@@ -75,6 +80,12 @@ def init_db():
         except: pass
     else:
         execute_db('''CREATE TABLE IF NOT EXISTS recent_calcs (id INTEGER PRIMARY KEY AUTOINCREMENT, inputs_json TEXT, result REAL)''', commit=True)
+
+    # Automatically create the default admin account if it doesn't exist
+    admin_exists = execute_db("SELECT * FROM users WHERE username = 'admin'", fetchone=True)
+    if not admin_exists:
+        default_hash = generate_password_hash('admin123')
+        execute_db("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", ('admin', default_hash, 'Enterprise AI Engineer'), commit=True)
 
 init_db()
 
@@ -107,8 +118,18 @@ except FileNotFoundError:
     model, scaler = RandomForestClassifier(), StandardScaler()
     model_accuracy, total_customers, features = 0, 0, ['Tenure', 'Usage Frequency', 'Support Calls', 'Payment Delay', 'Total Spend', 'Last Interaction']
 
+# --- AUTHENTICATION GATEKEEPER ---
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # --- ROUTES ---
 @app.route('/')
+@login_required
 def dashboard():
     try:
         services = execute_db('SELECT * FROM services', fetchall=True)
@@ -118,9 +139,10 @@ def dashboard():
         services = []
         
     metrics = {"model_accuracy": model_accuracy, "total_customers": total_customers}
-    return render_template('index.html', username="Admin", role="Enterprise AI Engineer", active_services=services, metrics=metrics, features=features)
+    return render_template('index.html', username=session.get('username', 'Admin'), role=session.get('role', 'AI Engineer'), active_services=services, metrics=metrics, features=features)
 
 @app.route('/services', methods=['GET', 'POST'])
+@login_required
 def manage_services():
     try:
         services = execute_db('SELECT * FROM services', fetchall=True)
@@ -130,7 +152,7 @@ def manage_services():
         services = []
 
     if request.method == 'GET':
-        return render_template('services.html', username="Admin", role="Enterprise AI Engineer", services=services)
+        return render_template('services.html', username=session.get('username', 'Admin'), role=session.get('role', 'AI Engineer'), services=services)
     
     if request.method == 'POST':
         service_name = request.form.get('service_name', 'Unnamed Service')
@@ -147,7 +169,6 @@ def manage_services():
                 if clean_col_str(c) in ['customerid', 'clientid', 'id', 'userid']:
                     client_id_col = c; break
             
-            # THE FIX: Removed [:7] so the matrix shows all columns!
             display_features = [c for c in df_new.columns if c != client_id_col]
             if not display_features: display_features = df_new.columns.tolist()
 
@@ -214,6 +235,7 @@ def manage_services():
         return redirect(url_for('view_report', report_id=report_id))
 
 @app.route('/report/service/<report_id>')
+@login_required
 def view_report(report_id):
     service_row = execute_db('SELECT * FROM services WHERE id = ?', (report_id,), fetchone=True)
     report_row = execute_db('SELECT * FROM reports WHERE service_id = ?', (report_id,), fetchone=True)
@@ -233,9 +255,10 @@ def view_report(report_id):
     df_train_mock = pd.DataFrame(valid_preds).apply(pd.to_numeric, errors='coerce')
     medians = df_train_mock.median().to_dict() if not df_train_mock.empty else {}
 
-    return render_template('report.html', username="Admin", role="Enterprise AI Engineer", report_data=service_data, risky_clients=predictions, medians=medians, stats=stats, features=features)
+    return render_template('report.html', username=session.get('username', 'Admin'), role=session.get('role', 'AI Engineer'), report_data=service_data, risky_clients=predictions, medians=medians, stats=stats, features=features)
 
 @app.route('/insights')
+@login_required
 def insights():
     if not gemini_client:
         ai_report = "<h2>API Key Missing</h2><p>Please add your GEMINI_API_KEY to the .env file.</p>"
@@ -247,9 +270,10 @@ def insights():
             ai_report = response.text.replace("```html", "").replace("```", "").strip()
         except Exception as e:
             ai_report = f"<h2>API Connection Error</h2><p>{str(e)}</p>"
-    return render_template('insights.html', username="Admin", role="Enterprise AI Engineer", ai_report=ai_report)
+    return render_template('insights.html', username=session.get('username', 'Admin'), role=session.get('role', 'AI Engineer'), ai_report=ai_report)
 
 @app.route('/api/manual_predict', methods=['POST'])
+@login_required
 def api_manual_predict():
     try:
         data = {k: safe_float(v) for k, v in request.json.items()}
@@ -265,6 +289,7 @@ def api_manual_predict():
     except Exception as e: return jsonify({"error": str(e)}), 400
 
 @app.route('/api/chat', methods=['POST'])
+@login_required
 def api_chat():
     msg = request.json.get('message', '')
     if not gemini_client: return jsonify({"reply": "API Key missing."})
@@ -273,12 +298,57 @@ def api_chat():
         return jsonify({"reply": response.text})
     except Exception as e: return jsonify({"reply": f"Error: {str(e)}"})
 
-@app.route('/login')
-def login(): return render_template('login.html')
-@app.route('/register')
-def register(): return render_template('register.html')
+
+# --- AUTHENTICATION ROUTES ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        # Verify user against the database
+        user = execute_db("SELECT * FROM users WHERE username = ?", (username,), fetchone=True)
+        
+        if user and check_password_hash(user['password_hash'], password):
+            session['logged_in'] = True
+            session['username'] = user['username']
+            session['role'] = user['role']
+            return redirect(url_for('dashboard'))
+        else:
+            error = "Invalid username or password. Please try again."
+            
+    return render_template('login.html', error=error)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register(): 
+    error = None
+    success = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        role = request.form.get('role', 'Data Analyst') # Default role if they don't pick one
+        
+        if not username or not password:
+            error = "Username and password are required."
+        else:
+            # Check if username is taken
+            existing_user = execute_db("SELECT * FROM users WHERE username = ?", (username,), fetchone=True)
+            if existing_user:
+                error = "Username already exists. Please choose a different one."
+            else:
+                # Hash the password and save
+                hashed_pw = generate_password_hash(password)
+                execute_db("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", 
+                           (username, hashed_pw, role), commit=True)
+                success = "Registration successful! You can now log in."
+                
+    return render_template('register.html', error=error, success=success)
+
 @app.route('/logout')
-def logout(): return redirect(url_for('login'))
+def logout(): 
+    session.clear() # This destroys the login session
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
