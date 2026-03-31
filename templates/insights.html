@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepRetain - Insights</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { font-family: system-ui, -apple-system, sans-serif; } .flame-btn { animation: pulse 2.5s infinite; } @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(26, 115, 232, 0); } 100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0); } }</style>
+</head>
+<body class="bg-[#f8f9fa] flex h-screen overflow-hidden text-[#202124]">
+    
+    <div id="mobile-menu" style="display: none;" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm">
+        <div class="flex w-64 bg-white h-full shadow-2xl flex-col justify-between">
+            <div>
+                <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
+                    <span class="font-extrabold text-xl tracking-tight text-slate-800">DeepRetain</span>
+                    <button onclick="document.getElementById('mobile-menu').style.display = 'none'" class="text-slate-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+                <nav class="flex-1 py-6 px-4 flex flex-col gap-2">
+                    <a href="/" class="p-3 text-[#5f6368] hover:bg-[#f1f3f4] rounded-xl font-bold text-sm">📊 Dashboard</a>
+                    <a href="/services" class="p-3 text-[#5f6368] hover:bg-[#f1f3f4] rounded-xl font-bold text-sm">💼 Active Services</a>
+                    <a href="/insights" class="p-3 text-[#1a73e8] bg-[#e8f0fe] rounded-xl font-bold text-sm">🧠 AI Solutions</a>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50">
+                <p class="font-bold text-sm">{{ username }}</p>
+                <p class="text-xs text-slate-500 mb-2">{{ role }}</p>
+                <a href="/logout" class="block w-full text-center text-xs font-bold text-[#c5221f] bg-[#fce8e6] px-3 py-2 rounded-lg">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <aside class="w-64 bg-white border-r border-[#e8eaed] hidden md:flex flex-col shadow-sm z-20 relative">
+        <div class="h-16 flex items-center px-6 border-b border-[#e8eaed]">
+            <div class="w-8 h-8 bg-gradient-to-br from-[#1a73e8] to-blue-500 rounded-lg flex items-center justify-center text-white font-extrabold mr-3">D</div>
+            <span class="font-extrabold text-xl tracking-tight text-[#202124]">DeepRetain <span class="text-[#1a73e8]">AI</span></span>
+        </div>
+        <nav class="flex-1 py-6 px-4 flex flex-col gap-2 overflow-y-auto">
+            <p class="text-xs font-bold text-[#5f6368] uppercase tracking-wider mb-2 ml-1">Intelligence</p>
+            <a href="/" class="flex items-center gap-3 p-3 text-[#5f6368] hover:bg-[#f1f3f4] hover:text-[#1a73e8] rounded-xl font-bold text-sm transition">📊 Dashboard</a>
+            <p class="text-xs font-bold text-[#5f6368] uppercase tracking-wider mb-2 ml-1 mt-6">Workflows</p>
+            <a href="/services" class="flex items-center gap-3 p-3 text-[#5f6368] hover:bg-[#f1f3f4] hover:text-[#1a73e8] rounded-xl font-bold text-sm transition">💼 Active Services</a>
+            <a href="/insights" class="flex items-center gap-3 p-3 text-[#1a73e8] bg-[#e8f0fe] rounded-xl font-bold text-sm transition">🧠 AI Solutions</a>
+        </nav>
+        <div class="p-4 border-t border-[#e8eaed] bg-[#f8f9fa] relative">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="document.getElementById('user-menu-desk').style.display = document.getElementById('user-menu-desk').style.display === 'none' ? 'block' : 'none'" class="text-[#5f6368] hover:text-[#1a73e8] transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+                    <div><p class="text-xs text-[#5f6368] font-medium">Tenant Admin</p><p class="font-bold text-sm">{{ username }}</p></div>
+                </div>
+            </div>
+            <div id="user-menu-desk" style="display: none;" class="absolute bottom-16 left-4 w-52 bg-white border border-[#e8eaed] rounded-xl shadow-2xl p-4 z-50">
+                <p class="text-xs font-bold text-[#5f6368] uppercase tracking-wider mb-1">User Info</p>
+                <p class="text-base font-extrabold text-[#202124]">{{ username }}</p>
+                <p class="text-xs text-[#5f6368] mb-3">Role: {{ role }}</p>
+                <hr class="border-[#e8eaed] my-2">
+                <p class="text-xs text-[#5f6368] mb-2">System Status: <span class="text-[#137333] font-bold">Online</span></p>
+                <a href="/logout" class="block w-full text-center text-xs font-bold text-[#c5221f] bg-[#fce8e6] px-3 py-2 rounded-lg transition mt-2">Logout</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full relative w-full overflow-y-auto">
+        <header class="h-16 bg-white border-b border-[#dadce0] flex items-center px-4 md:px-8 sticky top-0 z-10 shadow-sm">
+            <button onclick="document.getElementById('mobile-menu').style.display = 'block'" class="md:hidden mr-4 text-[#5f6368] hover:text-[#1a73e8]"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+            <h2 class="text-xl font-medium tracking-tight">AI Solutions & Insights</h2>
+        </header>
+
+        <div class="p-4 md:p-8 flex-1 pb-24 max-w-7xl mx-auto w-full">
+            <div class="bg-white rounded-2xl shadow-sm border border-[#e8eaed] overflow-hidden border-t-4 border-t-[#1a73e8]">
+                <div class="p-6 border-b border-[#e8eaed] flex items-center gap-4 bg-[#f8f9fa]">
+                    <span class="text-3xl">🧠</span>
+                    <div>
+                        <h3 class="text-xl font-medium text-[#202124]">Global Retention Report</h3>
+                        <p class="text-[14px] text-[#5f6368]">Generated dynamically by Gemini AI</p>
+                    </div>
+                </div>
+                
+                <div class="p-8 text-[15px] text-[#202124] leading-relaxed">
+                    {{ ai_report | safe }}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <div id="ai-chat-window" style="display: none;" class="w-[90vw] sm:w-[350px] bg-white rounded-2xl shadow-2xl border border-slate-200 mb-4 h-[450px] flex-col overflow-hidden transition-all transform origin-bottom-right">
+            <div class="bg-[#1a73e8] p-4 text-white shadow-md z-10 flex justify-between items-center">
+                <div class="flex items-center gap-3"><span class="text-2xl drop-shadow-md">🔥</span><div><h3 class="font-extrabold leading-tight text-lg">Blue Flame</h3><p class="text-[11px] font-medium text-blue-200 uppercase tracking-wider">AI Assistant</p></div></div>
+                <button onclick="document.getElementById('ai-chat-window').style.display = 'none'" class="text-white hover:text-blue-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div id="chat-box" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 bg-[#f8f9fa] text-sm">
+                <div class="bg-white p-3.5 rounded-2xl rounded-tl-sm border border-[#e8eaed] text-[#202124] self-start shadow-sm max-w-[85%] font-medium leading-relaxed">Hello {{ username }}! How can I assist you?</div>
+            </div>
+            <div class="p-3 bg-white border-t border-[#e8eaed] flex gap-2">
+                <input type="text" id="chat-input" class="flex-1 bg-[#f1f3f4] border border-[#dadce0] rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-[#1a73e8]" placeholder="Ask Gemini..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()" class="bg-[#1a73e8] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1557b0] shadow-md">Send</button>
+            </div>
+        </div>
+        <button id="flame-toggle" onclick="const w = document.getElementById('ai-chat-window'); w.style.display = w.style.display === 'none' ? 'flex' : 'none';" class="flame-btn w-14 h-14 bg-[#1a73e8] rounded-full shadow-xl shadow-blue-300 flex items-center justify-center text-white text-2xl hover:scale-110 transition-transform">🔥</button>
+    </div>
+
+    <script>
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input'), box = document.getElementById('chat-box'), msg = input.value.trim();
+            if (!msg) return;
+            box.innerHTML += `<div class="bg-[#1a73e8] text-white p-3.5 rounded-2xl rounded-tr-sm self-end shadow-sm max-w-[85%] font-medium">${msg}</div>`;
+            input.value = ''; box.scrollTop = box.scrollHeight;
+            try {
+                const res = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message: msg}) });
+                const data = await res.json();
+                box.innerHTML += `<div class="bg-white p-3.5 rounded-2xl rounded-tl-sm border border-[#e8eaed] text-[#202124] self-start shadow-sm max-w-[85%] font-medium leading-relaxed">${data.reply}</div>`;
+            } catch (e) { box.innerHTML += `<div class="bg-[#fce8e6] p-3.5 rounded-2xl rounded-tl-sm border border-[#f28b82] text-[#c5221f] self-start shadow-sm max-w-[85%] font-medium">Error connecting to Gemini API.</div>`; }
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>

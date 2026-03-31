@@ -1,0 +1,10 @@
+# Virtual Environments
+venv/
+env/
+__pycache__/
+
+# Local Databases
+deepretain.db
+
+# Secrets
+.env
